@@ -1,0 +1,6 @@
+node_modules/
+dist/
+coverage/
+smoke/
+*.tgz
+package-lock.json
