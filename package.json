@@ -1,6 +1,6 @@
 {
   "name": "bite-times",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Solunar bite times calculator for fishing — major/minor feeding periods, sun/moon rise and set, moon phase and illumination for any location and date",
   "keywords": [
     "solunar",
@@ -12,7 +12,9 @@
     "sunrise",
     "sunset",
     "suncalc",
-    "angling"
+    "angling",
+    "cli",
+    "fishing forecast"
   ],
   "license": "MIT",
   "author": "Ben Quinteros (https://github.com/benpaternostro)",
@@ -27,6 +29,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "bite-times": "./dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": {
@@ -40,7 +45,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=18"
