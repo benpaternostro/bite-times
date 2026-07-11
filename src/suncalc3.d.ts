@@ -3,6 +3,13 @@ declare module "suncalc3" {
     value: Date;
     ts: number;
     name: string;
+    /**
+     * False during polar day/polar night, when the sun never rises or
+     * never sets on the queried day. `value` is still populated with a
+     * placeholder Date even when `valid` is false — always check `valid`
+     * before using `value`.
+     */
+    valid: boolean;
   }
 
   export interface SunTimes {
@@ -51,6 +58,14 @@ declare module "suncalc3" {
     invert: Date | null;
   }
 
+  export interface MoonPosition {
+    azimuth: number;
+    altitude: number;
+    /** Earth–moon distance in km */
+    distance: number;
+    parallacticAngle: number;
+  }
+
   const SunCalc: {
     getSunTimes(
       dateValue: Date | number,
@@ -73,6 +88,11 @@ declare module "suncalc3" {
       lat: number,
       lng: number,
     ): MoonTransit;
+    getMoonPosition(
+      dateValue: Date | number,
+      lat: number,
+      lng: number,
+    ): MoonPosition;
   };
 
   export default SunCalc;
