@@ -5,13 +5,68 @@ const PRESETS = [
   { name: "San Francisco", lat: 37.7749, lon: -122.4194 },
 ];
 
+const outputEl = document.getElementById("output");
+
 function normalizeLon(lon) {
   return ((lon + 180) % 360 + 360) % 360 - 180;
 }
 
-// Replaced with real calculation + rendering in Task 3.
+// Shifts a UTC ISO instant by offsetHours and formats the result's UTC
+// wall-clock time. Must use timeZone: "UTC" here — the shift was already
+// applied manually via epoch milliseconds, so re-reading with the visitor's
+// own local timezone would double-shift it.
+function shiftedTimeLabel(isoString, offsetHours) {
+  const instant = new Date(isoString).getTime() + offsetHours * 3600 * 1000;
+  return new Date(instant).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
+}
+
+// sunRise/sunSet/moonRise/moonSet are bare "HH:MM" UTC strings with no ISO
+// field of their own — reconstruct one from the separate "YYYYMMDD" date
+// field so the same shift logic can apply. Empty string means the event
+// doesn't occur that day (polar regions).
+function shiftedHHMM(dateYYYYMMDD, hhmm, offsetHours) {
+  if (!hhmm) return "—";
+  const iso = `${dateYYYYMMDD.slice(0, 4)}-${dateYYYYMMDD.slice(4, 6)}-${dateYYYYMMDD.slice(6, 8)}T${hhmm}:00Z`;
+  return shiftedTimeLabel(iso, offsetHours);
+}
+
+let calculateSolunarPeriods = null;
+let loadError = null;
+try {
+  ({ calculateSolunarPeriods } = await import("https://esm.sh/bite-times"));
+} catch (err) {
+  loadError = err;
+}
+
 function selectPoint(lat, lon, name) {
-  console.log("selected:", name || "(custom)", lat, lon);
+  if (!calculateSolunarPeriods) {
+    outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator — try refreshing.</p>`;
+    return;
+  }
+
+  const data = calculateSolunarPeriods(lat, lon, new Date());
+  const offsetHours = Math.round(lon / 15);
+  const period = (p) =>
+    `${shiftedTimeLabel(p.startISO, offsetHours)}–${shiftedTimeLabel(p.endISO, offsetHours)}`;
+  const filled = Math.round(data.dayRating);
+
+  outputEl.innerHTML = `
+    <p class="output-loc">${name ? name.toUpperCase() + " · " : ""}${lat.toFixed(2)}°, ${lon.toFixed(2)}°</p>
+    <p class="output-rating">${"★".repeat(filled)}${"☆".repeat(5 - filled)} ${data.dayRating} <span>${data.dayRatingLabel}</span></p>
+    <div class="output-grid">
+      <div><b>Moon phase</b>${data.moonPhase} ${data.moonIllumination}%</div>
+      <div><b>Tide</b>${data.tideType} (${data.tideStrength})</div>
+      <div><b>Sun</b>${shiftedHHMM(data.date, data.sunRise, offsetHours)} → ${shiftedHHMM(data.date, data.sunSet, offsetHours)}</div>
+      <div><b>Moon</b>${shiftedHHMM(data.date, data.moonRise, offsetHours)} → ${shiftedHHMM(data.date, data.moonSet, offsetHours)}</div>
+      <div><b>Major</b>${data.majorPeriods.map(period).join(", ")}</div>
+      <div><b>Minor</b>${data.minorPeriods.map(period).join(", ")}</div>
+    </div>
+    <p class="output-note">Times are approximate local time, estimated from longitude — not real timezone boundaries or daylight saving.</p>
+  `;
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([20, 10], 2);
@@ -58,6 +113,9 @@ map.on("click", (e) => {
   selectPoint(e.latlng.lat, lon);
 });
 
-// Select Sydney by default so the map isn't empty on load.
 markSelected(PRESETS[0].lat, PRESETS[0].lon);
 selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
+
+if (loadError) {
+  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name); // shows the error state
+}
