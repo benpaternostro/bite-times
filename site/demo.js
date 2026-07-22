@@ -34,15 +34,19 @@ function shiftedHHMM(dateYYYYMMDD, hhmm, offsetHours) {
   return shiftedTimeLabel(iso, offsetHours);
 }
 
+// Declared ahead of the map setup (and the bite-times import below) because
+// selectPoint's guard reads it on every click, including clicks that land
+// before the import has settled.
 let calculateSolunarPeriods = null;
-let loadError = null;
-try {
-  ({ calculateSolunarPeriods } = await import("https://esm.sh/bite-times"));
-} catch (err) {
-  loadError = err;
-}
+
+// Tracks the most recently selected point so the output panel can be
+// refreshed with real data once the bite-times import resolves, without
+// forcing the view back to the first preset if the visitor already clicked
+// elsewhere while the import was still in flight.
+let currentSelection = null;
 
 function selectPoint(lat, lon, name) {
+  currentSelection = { lat, lon, name };
   if (!calculateSolunarPeriods) {
     outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator — try refreshing.</p>`;
     return;
@@ -116,6 +120,19 @@ map.on("click", (e) => {
 markSelected(PRESETS[0].lat, PRESETS[0].lon);
 selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
 
-if (loadError) {
-  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name); // shows the error state
+// Loaded after the map is fully interactive so a slow or hanging esm.sh
+// request never blocks the map from rendering. Pinned to the version this
+// page's rendering code was written against (dayRating, tideStrength, etc.),
+// matching the version pin already used for Leaflet above.
+try {
+  ({ calculateSolunarPeriods } = await import("https://esm.sh/bite-times@1.1.0"));
+  // The import may resolve after the visitor has already clicked around
+  // (or after the initial PRESETS[0] render above showed the error state
+  // because it ran before the import even started) — refresh whatever is
+  // currently selected now that real data is available.
+  if (currentSelection) {
+    selectPoint(currentSelection.lat, currentSelection.lon, currentSelection.name);
+  }
+} catch (err) {
+  console.error("Failed to load bite-times calculator:", err);
 }
