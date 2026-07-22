@@ -61,7 +61,7 @@ function escapeHtml(str) {
 function selectPoint(lat, lon, name, persist = true) {
   currentSelection = { lat, lon, name, persist };
   if (!calculateSolunarPeriods) {
-    outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator — try refreshing.</p>`;
+    outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator. Try refreshing.</p>`;
     return;
   }
 
@@ -82,7 +82,7 @@ function selectPoint(lat, lon, name, persist = true) {
       <div><b>Major</b>${data.majorPeriods.map(period).join(", ")}</div>
       <div><b>Minor</b>${data.minorPeriods.map(period).join(", ")}</div>
     </div>
-    <p class="output-note">Times are approximate local time, estimated from longitude — not real timezone boundaries or daylight saving.</p>
+    <p class="output-note">Times are approximate local time, estimated from longitude, not real timezone boundaries or daylight saving.</p>
   `;
 
   if (persist) saveLocation({ lat, lon, name });
@@ -175,7 +175,7 @@ async function performSearch(query) {
     showSearchResults(results);
   } catch (err) {
     console.error("Search failed:", err);
-    showSearchMessage("Couldn't search right now — try again.");
+    showSearchMessage("Couldn't search right now. Try again.");
   }
 }
 
@@ -205,7 +205,7 @@ locateBtn.addEventListener("click", () => {
       goToPoint(position.coords.latitude, position.coords.longitude);
     },
     () => {
-      showSearchMessage("Couldn't get your location — check permissions and try again.");
+      showSearchMessage("Couldn't get your location. Check permissions and try again.");
     }
   );
 });
