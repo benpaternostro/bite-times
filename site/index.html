@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>bite-times — solunar bite times calculator for fishing</title>
+  <meta name="description" content="Offline solunar bite times calculator for fishing — major/minor feeding periods, sun/moon rise and set, moon phase, and tide strength. Try it live on the map." />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="hero">
+    <div class="hero-moon" aria-hidden="true"></div>
+    <h1>bite times</h1>
+    <p class="tagline">Know when the fish are moving — sun, moon, and tide, computed offline, no API calls.</p>
+    <a class="cta" href="#demo">Try it below ↓</a>
+  </header>
+
+  <section id="demo" class="demo">
+    <p class="eyebrow">Live demo</p>
+    <h2>Pick a spot, see tonight's bite window</h2>
+    <div class="demo-row">
+      <div id="map"></div>
+      <div id="output" class="output" aria-live="polite">
+        <p class="output-placeholder">Click a pin or anywhere on the map to see bite times for that spot.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    <h2>Why bite-times</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true">📡</span>
+        <h3>Offline</h3>
+        <p>No API calls — pure local computation.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true">🔧</span>
+        <h3>Typed API</h3>
+        <p>TypeScript, CJS + ESM builds.</p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true">⌨️</span>
+        <h3>CLI included</h3>
+        <p><code>npx bite-times --lat= --lon=</code></p>
+      </div>
+      <div class="feature">
+        <span class="feature-icon" aria-hidden="true">⚖️</span>
+        <h3>MIT licensed</h3>
+        <p>One dependency, zero bloat.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="install">
+    <code>npm install bite-times</code>
+  </section>
+
+  <footer class="site-footer">
+    <p>MIT © Ben Paternostro · <a href="https://github.com/benpaternostro/bite-times">GitHub</a> · <a href="https://www.npmjs.com/package/bite-times">npm</a></p>
+    <p>Astronomy via <a href="https://github.com/hypnos3/suncalc3">suncalc3</a> (BSD-2-Clause) · Map tiles © <a href="https://carto.com/attributions">CARTO</a>, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="demo.js"></script>
+</body>
+</html>
