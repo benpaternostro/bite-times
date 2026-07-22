@@ -165,10 +165,11 @@ function showSearchResults(results) {
   });
 }
 
-searchForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const query = searchInput.value.trim();
-  if (!query) return;
+async function performSearch(query) {
+  if (!query) {
+    searchResultsEl.hidden = true;
+    return;
+  }
   try {
     const results = await searchPlace(query);
     showSearchResults(results);
@@ -176,6 +177,22 @@ searchForm.addEventListener("submit", async (e) => {
     console.error("Search failed:", err);
     showSearchMessage("Couldn't search right now — try again.");
   }
+}
+
+let searchDebounceTimer = null;
+
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  clearTimeout(searchDebounceTimer);
+  performSearch(searchInput.value.trim());
+});
+
+// Debounced so typing doesn't fire a request per keystroke — Nominatim's
+// usage policy discourages autocomplete-as-you-type; this waits for a
+// pause instead of querying on every character.
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => performSearch(searchInput.value.trim()), 400);
 });
 
 locateBtn.addEventListener("click", () => {
