@@ -20,6 +20,18 @@
   <section id="demo" class="demo">
     <p class="eyebrow">Live demo</p>
     <h2>Pick a spot, see tonight's bite window</h2>
+    <form id="search-row" class="search-row">
+      <input
+        id="search-input"
+        class="search-input"
+        type="text"
+        placeholder="Search a place… (e.g. Miami, FL)"
+        aria-label="Search for a place"
+        autocomplete="off"
+      />
+      <button type="submit" class="search-btn">Search</button>
+      <div id="search-results" class="search-results" hidden></div>
+    </form>
     <div class="demo-row">
       <div id="map"></div>
       <div id="output" class="output" aria-live="polite">

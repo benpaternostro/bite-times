@@ -1,4 +1,5 @@
 import { saveLocation, loadLocation } from "./storage.js";
+import { searchPlace } from "./geocode.js";
 
 const PRESETS = [
   { name: "Sydney", lat: -33.8568, lon: 151.2153 },
@@ -8,6 +9,9 @@ const PRESETS = [
 ];
 
 const outputEl = document.getElementById("output");
+const searchForm = document.getElementById("search-row");
+const searchInput = document.getElementById("search-input");
+const searchResultsEl = document.getElementById("search-results");
 
 function normalizeLon(lon) {
   return ((lon + 180) % 360 + 360) % 360 - 180;
@@ -129,6 +133,42 @@ map.on("click", (e) => {
   const lon = normalizeLon(e.latlng.lng);
   markSelected(e.latlng.lat, lon);
   selectPoint(e.latlng.lat, lon);
+});
+
+function showSearchMessage(text) {
+  searchResultsEl.innerHTML = `<p class="search-results-message">${text}</p>`;
+  searchResultsEl.hidden = false;
+}
+
+function showSearchResults(results) {
+  if (results.length === 0) {
+    showSearchMessage(`No matches for "${searchInput.value.trim()}".`);
+    return;
+  }
+  searchResultsEl.innerHTML = results
+    .map((r, i) => `<div class="search-result-item" data-index="${i}">${r.name}</div>`)
+    .join("");
+  searchResultsEl.hidden = false;
+  [...searchResultsEl.querySelectorAll(".search-result-item")].forEach((el) => {
+    el.addEventListener("click", () => {
+      const r = results[Number(el.dataset.index)];
+      goToPoint(r.lat, r.lon, r.name);
+      searchResultsEl.hidden = true;
+    });
+  });
+}
+
+searchForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const query = searchInput.value.trim();
+  if (!query) return;
+  try {
+    const results = await searchPlace(query);
+    showSearchResults(results);
+  } catch (err) {
+    console.error("Search failed:", err);
+    showSearchMessage("Couldn't search right now — try again.");
+  }
 });
 
 const savedLocation = loadLocation();
