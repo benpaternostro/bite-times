@@ -58,8 +58,8 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-function selectPoint(lat, lon, name) {
-  currentSelection = { lat, lon, name };
+function selectPoint(lat, lon, name, persist = true) {
+  currentSelection = { lat, lon, name, persist };
   if (!calculateSolunarPeriods) {
     outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator — try refreshing.</p>`;
     return;
@@ -85,7 +85,7 @@ function selectPoint(lat, lon, name) {
     <p class="output-note">Times are approximate local time, estimated from longitude — not real timezone boundaries or daylight saving.</p>
   `;
 
-  saveLocation({ lat, lon, name });
+  if (persist) saveLocation({ lat, lon, name });
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([20, 10], 2);
@@ -198,7 +198,7 @@ if (savedLocation) {
   goToPoint(savedLocation.lat, savedLocation.lon, savedLocation.name);
 } else {
   markSelected(PRESETS[0].lat, PRESETS[0].lon);
-  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
+  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name, false);
 }
 
 // Loaded after the map is fully interactive so a slow or hanging esm.sh
@@ -208,11 +208,11 @@ if (savedLocation) {
 try {
   ({ calculateSolunarPeriods } = await import("https://esm.sh/bite-times@1.1.0"));
   // The import may resolve after the visitor has already clicked around
-  // (or after the initial PRESETS[0] render above showed the error state
+  // (or after the initial render above showed the error state
   // because it ran before the import even started) — refresh whatever is
   // currently selected now that real data is available.
   if (currentSelection) {
-    selectPoint(currentSelection.lat, currentSelection.lon, currentSelection.name);
+    selectPoint(currentSelection.lat, currentSelection.lon, currentSelection.name, currentSelection.persist);
   }
 } catch (err) {
   console.error("Failed to load bite-times calculator:", err);
