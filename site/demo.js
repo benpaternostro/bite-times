@@ -1,3 +1,5 @@
+import { saveLocation, loadLocation } from "./storage.js";
+
 const PRESETS = [
   { name: "Sydney", lat: -33.8568, lon: 151.2153 },
   { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
@@ -71,6 +73,8 @@ function selectPoint(lat, lon, name) {
     </div>
     <p class="output-note">Times are approximate local time, estimated from longitude — not real timezone boundaries or daylight saving.</p>
   `;
+
+  saveLocation({ lat, lon, name });
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([20, 10], 2);
@@ -101,6 +105,16 @@ function markSelected(lat, lon) {
   selectedMarker = L.marker([lat, lon], { icon: redIcon }).addTo(map);
 }
 
+// Used to jump to a location the visitor didn't navigate to themselves
+// (search results, geolocation, restoring a saved spot) — unlike preset/
+// map clicks, the map view needs to move since the point may be far from
+// wherever the map currently happens to be centered.
+function goToPoint(lat, lon, name) {
+  map.setView([lat, lon], 9);
+  markSelected(lat, lon);
+  selectPoint(lat, lon, name);
+}
+
 PRESETS.forEach((p) => {
   L.marker([p.lat, p.lon], { icon: goldIcon })
     .addTo(map)
@@ -117,8 +131,13 @@ map.on("click", (e) => {
   selectPoint(e.latlng.lat, lon);
 });
 
-markSelected(PRESETS[0].lat, PRESETS[0].lon);
-selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
+const savedLocation = loadLocation();
+if (savedLocation) {
+  goToPoint(savedLocation.lat, savedLocation.lon, savedLocation.name);
+} else {
+  markSelected(PRESETS[0].lat, PRESETS[0].lon);
+  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
+}
 
 // Loaded after the map is fully interactive so a slow or hanging esm.sh
 // request never blocks the map from rendering. Pinned to the version this
