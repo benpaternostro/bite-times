@@ -1,3 +1,6 @@
+import { saveLocation, loadLocation } from "./storage.js";
+import { searchPlace } from "./geocode.js";
+
 const PRESETS = [
   { name: "Sydney", lat: -33.8568, lon: 151.2153 },
   { name: "Tokyo", lat: 35.6762, lon: 139.6503 },
@@ -6,6 +9,10 @@ const PRESETS = [
 ];
 
 const outputEl = document.getElementById("output");
+const searchForm = document.getElementById("search-row");
+const searchInput = document.getElementById("search-input");
+const searchResultsEl = document.getElementById("search-results");
+const locateBtn = document.getElementById("locate-btn");
 
 function normalizeLon(lon) {
   return ((lon + 180) % 360 + 360) % 360 - 180;
@@ -45,10 +52,16 @@ let calculateSolunarPeriods = null;
 // elsewhere while the import was still in flight.
 let currentSelection = null;
 
-function selectPoint(lat, lon, name) {
-  currentSelection = { lat, lon, name };
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function selectPoint(lat, lon, name, persist = true) {
+  currentSelection = { lat, lon, name, persist };
   if (!calculateSolunarPeriods) {
-    outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator — try refreshing.</p>`;
+    outputEl.innerHTML = `<p class="output-error">Couldn't load the calculator. Try refreshing.</p>`;
     return;
   }
 
@@ -59,7 +72,7 @@ function selectPoint(lat, lon, name) {
   const filled = Math.round(data.dayRating);
 
   outputEl.innerHTML = `
-    <p class="output-loc">${name ? name.toUpperCase() + " · " : ""}${lat.toFixed(2)}°, ${lon.toFixed(2)}°</p>
+    <p class="output-loc">${name ? escapeHtml(name.toUpperCase()) + " · " : ""}${lat.toFixed(2)}°, ${lon.toFixed(2)}°</p>
     <p class="output-rating">${"★".repeat(filled)}${"☆".repeat(5 - filled)} ${data.dayRating} <span>${data.dayRatingLabel}</span></p>
     <div class="output-grid">
       <div><b>Moon phase</b>${data.moonPhase} ${data.moonIllumination}%</div>
@@ -69,8 +82,10 @@ function selectPoint(lat, lon, name) {
       <div><b>Major</b>${data.majorPeriods.map(period).join(", ")}</div>
       <div><b>Minor</b>${data.minorPeriods.map(period).join(", ")}</div>
     </div>
-    <p class="output-note">Times are approximate local time, estimated from longitude — not real timezone boundaries or daylight saving.</p>
+    <p class="output-note">Times are approximate local time, estimated from longitude, not real timezone boundaries or daylight saving.</p>
   `;
+
+  if (persist) saveLocation({ lat, lon, name });
 }
 
 const map = L.map("map", { worldCopyJump: true }).setView([20, 10], 2);
@@ -101,6 +116,16 @@ function markSelected(lat, lon) {
   selectedMarker = L.marker([lat, lon], { icon: redIcon }).addTo(map);
 }
 
+// Used to jump to a location the visitor didn't navigate to themselves
+// (search results, geolocation, restoring a saved spot) — unlike preset/
+// map clicks, the map view needs to move since the point may be far from
+// wherever the map currently happens to be centered.
+function goToPoint(lat, lon, name) {
+  map.setView([lat, lon], 9);
+  markSelected(lat, lon);
+  selectPoint(lat, lon, name);
+}
+
 PRESETS.forEach((p) => {
   L.marker([p.lat, p.lon], { icon: goldIcon })
     .addTo(map)
@@ -117,8 +142,81 @@ map.on("click", (e) => {
   selectPoint(e.latlng.lat, lon);
 });
 
-markSelected(PRESETS[0].lat, PRESETS[0].lon);
-selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
+function showSearchMessage(text) {
+  searchResultsEl.innerHTML = `<p class="search-results-message">${escapeHtml(text)}</p>`;
+  searchResultsEl.hidden = false;
+}
+
+function showSearchResults(results) {
+  if (results.length === 0) {
+    showSearchMessage(`No matches for "${searchInput.value.trim()}".`);
+    return;
+  }
+  searchResultsEl.innerHTML = results
+    .map((r, i) => `<div class="search-result-item" data-index="${i}">${escapeHtml(r.name)}</div>`)
+    .join("");
+  searchResultsEl.hidden = false;
+  [...searchResultsEl.querySelectorAll(".search-result-item")].forEach((el) => {
+    el.addEventListener("click", () => {
+      const r = results[Number(el.dataset.index)];
+      goToPoint(r.lat, r.lon, r.name);
+      searchResultsEl.hidden = true;
+    });
+  });
+}
+
+async function performSearch(query) {
+  if (!query) {
+    searchResultsEl.hidden = true;
+    return;
+  }
+  try {
+    const results = await searchPlace(query);
+    showSearchResults(results);
+  } catch (err) {
+    console.error("Search failed:", err);
+    showSearchMessage("Couldn't search right now. Try again.");
+  }
+}
+
+let searchDebounceTimer = null;
+
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  clearTimeout(searchDebounceTimer);
+  performSearch(searchInput.value.trim());
+});
+
+// Debounced so typing doesn't fire a request per keystroke — Nominatim's
+// usage policy discourages autocomplete-as-you-type; this waits for a
+// pause instead of querying on every character.
+searchInput.addEventListener("input", () => {
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => performSearch(searchInput.value.trim()), 400);
+});
+
+locateBtn.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    showSearchMessage("Geolocation isn't supported in this browser.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      goToPoint(position.coords.latitude, position.coords.longitude);
+    },
+    () => {
+      showSearchMessage("Couldn't get your location. Check permissions and try again.");
+    }
+  );
+});
+
+const savedLocation = loadLocation();
+if (savedLocation) {
+  goToPoint(savedLocation.lat, savedLocation.lon, savedLocation.name);
+} else {
+  markSelected(PRESETS[0].lat, PRESETS[0].lon);
+  selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name, false);
+}
 
 // Loaded after the map is fully interactive so a slow or hanging esm.sh
 // request never blocks the map from rendering. Pinned to the version this
@@ -127,11 +225,11 @@ selectPoint(PRESETS[0].lat, PRESETS[0].lon, PRESETS[0].name);
 try {
   ({ calculateSolunarPeriods } = await import("https://esm.sh/bite-times@1.1.0"));
   // The import may resolve after the visitor has already clicked around
-  // (or after the initial PRESETS[0] render above showed the error state
+  // (or after the initial render above showed the error state
   // because it ran before the import even started) — refresh whatever is
   // currently selected now that real data is available.
   if (currentSelection) {
-    selectPoint(currentSelection.lat, currentSelection.lon, currentSelection.name);
+    selectPoint(currentSelection.lat, currentSelection.lon, currentSelection.name, currentSelection.persist);
   }
 } catch (err) {
   console.error("Failed to load bite-times calculator:", err);

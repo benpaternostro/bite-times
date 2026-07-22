@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>bite-times — solunar bite times calculator for fishing</title>
-  <meta name="description" content="Offline solunar bite times calculator for fishing — major/minor feeding periods, sun/moon rise and set, moon phase, and tide strength. Try it live on the map." />
+  <title>bite-times: solunar bite times calculator for fishing</title>
+  <meta name="description" content="Offline solunar bite times calculator for fishing: major/minor feeding periods, sun/moon rise and set, moon phase, and tide strength. Try it live on the map." />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,13 +13,26 @@
   <header class="hero">
     <div class="hero-moon" aria-hidden="true"></div>
     <h1>bite times</h1>
-    <p class="tagline">Know when the fish are moving — sun, moon, and tide, computed offline, no API calls.</p>
+    <p class="tagline">Know when the fish are moving: sun, moon, and tide, computed offline, no API calls.</p>
     <a class="cta" href="#demo">Try it below ↓</a>
   </header>
 
   <section id="demo" class="demo">
     <p class="eyebrow">Live demo</p>
     <h2>Pick a spot, see tonight's bite window</h2>
+    <form id="search-row" class="search-row">
+      <input
+        id="search-input"
+        class="search-input"
+        type="text"
+        placeholder="Search a place… (e.g. Miami, FL)"
+        aria-label="Search for a place"
+        autocomplete="off"
+      />
+      <button type="submit" class="search-btn">Search</button>
+      <button type="button" id="locate-btn" class="locate-btn">📍 Use my location</button>
+      <div id="search-results" class="search-results" hidden></div>
+    </form>
     <div class="demo-row">
       <div id="map"></div>
       <div id="output" class="output" aria-live="polite">
@@ -34,7 +47,7 @@
       <div class="feature">
         <span class="feature-icon" aria-hidden="true">📡</span>
         <h3>Offline</h3>
-        <p>No API calls — pure local computation.</p>
+        <p>No API calls. Pure local computation.</p>
       </div>
       <div class="feature">
         <span class="feature-icon" aria-hidden="true">🔧</span>

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bite-times-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "site"],
+      "port": 4173,
+      "autoPort": true
+    }
+  ]
+}
