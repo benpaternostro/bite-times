@@ -51,6 +51,12 @@ let calculateSolunarPeriods = null;
 // elsewhere while the import was still in flight.
 let currentSelection = null;
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function selectPoint(lat, lon, name) {
   currentSelection = { lat, lon, name };
   if (!calculateSolunarPeriods) {
@@ -65,7 +71,7 @@ function selectPoint(lat, lon, name) {
   const filled = Math.round(data.dayRating);
 
   outputEl.innerHTML = `
-    <p class="output-loc">${name ? name.toUpperCase() + " · " : ""}${lat.toFixed(2)}°, ${lon.toFixed(2)}°</p>
+    <p class="output-loc">${name ? escapeHtml(name.toUpperCase()) + " · " : ""}${lat.toFixed(2)}°, ${lon.toFixed(2)}°</p>
     <p class="output-rating">${"★".repeat(filled)}${"☆".repeat(5 - filled)} ${data.dayRating} <span>${data.dayRatingLabel}</span></p>
     <div class="output-grid">
       <div><b>Moon phase</b>${data.moonPhase} ${data.moonIllumination}%</div>
@@ -134,12 +140,6 @@ map.on("click", (e) => {
   markSelected(e.latlng.lat, lon);
   selectPoint(e.latlng.lat, lon);
 });
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
 
 function showSearchMessage(text) {
   searchResultsEl.innerHTML = `<p class="search-results-message">${escapeHtml(text)}</p>`;
