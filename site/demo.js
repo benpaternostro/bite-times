@@ -135,8 +135,14 @@ map.on("click", (e) => {
   selectPoint(e.latlng.lat, lon);
 });
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function showSearchMessage(text) {
-  searchResultsEl.innerHTML = `<p class="search-results-message">${text}</p>`;
+  searchResultsEl.innerHTML = `<p class="search-results-message">${escapeHtml(text)}</p>`;
   searchResultsEl.hidden = false;
 }
 
@@ -146,7 +152,7 @@ function showSearchResults(results) {
     return;
   }
   searchResultsEl.innerHTML = results
-    .map((r, i) => `<div class="search-result-item" data-index="${i}">${r.name}</div>`)
+    .map((r, i) => `<div class="search-result-item" data-index="${i}">${escapeHtml(r.name)}</div>`)
     .join("");
   searchResultsEl.hidden = false;
   [...searchResultsEl.querySelectorAll(".search-result-item")].forEach((el) => {
