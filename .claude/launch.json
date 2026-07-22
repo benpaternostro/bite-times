@@ -4,8 +4,9 @@
     {
       "name": "bite-times-site",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "serve", "site", "-l", "4173"],
-      "port": 4173
+      "runtimeArgs": ["--yes", "serve", "site"],
+      "port": 4173,
+      "autoPort": true
     }
   ]
 }
