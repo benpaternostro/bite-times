@@ -12,6 +12,7 @@ const outputEl = document.getElementById("output");
 const searchForm = document.getElementById("search-row");
 const searchInput = document.getElementById("search-input");
 const searchResultsEl = document.getElementById("search-results");
+const locateBtn = document.getElementById("locate-btn");
 
 function normalizeLon(lon) {
   return ((lon + 180) % 360 + 360) % 360 - 180;
@@ -175,6 +176,21 @@ searchForm.addEventListener("submit", async (e) => {
     console.error("Search failed:", err);
     showSearchMessage("Couldn't search right now — try again.");
   }
+});
+
+locateBtn.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    showSearchMessage("Geolocation isn't supported in this browser.");
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      goToPoint(position.coords.latitude, position.coords.longitude);
+    },
+    () => {
+      showSearchMessage("Couldn't get your location — check permissions and try again.");
+    }
+  );
 });
 
 const savedLocation = loadLocation();

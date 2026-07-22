@@ -100,6 +100,18 @@ a { color: inherit; }
   padding: 0 20px;
   cursor: pointer;
 }
+.locate-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #eaf6f6;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.locate-btn:hover { background: rgba(255, 255, 255, 0.18); }
 .search-results {
   position: absolute;
   top: calc(100% + 6px);
