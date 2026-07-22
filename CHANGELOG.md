@@ -1,6 +1,15 @@
 # Changelog
 
-## 1.1.0 — unreleased
+## 1.1.1 — 2026-07-22
+
+### Changed
+
+- Corrected the copyright/author name to Ben Paternostro across `LICENSE`,
+  `package.json`, and this file's own license section
+- Added a BSD-2-Clause third-party attribution notice for suncalc3 (the
+  package's only dependency) to the README
+
+## 1.1.0 — 2026-07-11
 
 ### Added
 
